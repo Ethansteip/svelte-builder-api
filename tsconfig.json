@@ -1,20 +1,14 @@
 {
   "compilerOptions": {
-    "outDir": "dist",
-    "incremental": true,
-    "target": "es2017",
+    "target": "es2018",
     "module": "commonjs",
+    "outDir": "./dist",
+    "rootDir": "./src",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "noImplicitReturns": true,
-    "noUnusedLocals": true,
-    "noImplicitAny": false,
-    "sourceMap": true,
-    "lib": ["ESNext"],
-    "strictNullChecks": false
+    "forceConsistentCasingInFileNames": true
   },
-  "compileOnSave": true,
-  "include": ["src"]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules"]
 }
