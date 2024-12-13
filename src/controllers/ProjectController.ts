@@ -11,10 +11,16 @@ export class ProjectController {
 
   createProject = async (req: Request, res: Response) => {
     try {
+      console.log('Creating project');
       const projectId = uuidv4();
       const result =
         await this.storageRepository.createNewProjectFromTemplate();
-      res.json({ success: true, projectId: result });
+
+      res.status(200).json({
+        success: true,
+        projectId: result.projectId,
+        downloadUrl: result.downloadUrl
+      });
     } catch (error) {
       res.status(500).json({
         success: false,
