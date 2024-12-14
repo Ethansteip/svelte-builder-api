@@ -3,13 +3,12 @@ import { config } from 'dotenv';
 import projectRoutes from './routes/projects';
 import cors from 'cors';
 
-// Load environment variables
-config();
+if (process.env.NODE_ENV !== 'production') {
+  config();
+}
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-
-const isDevelopment = process.env.NODE_ENV === 'development';
 
 // CORS configuration
 // const corsOptions = {
