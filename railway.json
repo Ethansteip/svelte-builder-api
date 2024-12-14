@@ -1,0 +1,8 @@
+{
+  "build": {
+    "dockerfile": "Dockerfile",
+    "args": {
+      "SSH_PRIVATE_KEY": "${SSH_PRIVATE_KEY}"
+    }
+  }
+}
