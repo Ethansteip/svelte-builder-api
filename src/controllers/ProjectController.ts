@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { v4 as uuidv4 } from 'uuid';
 import { StorageRepository } from '../repositories/StorageRepository';
+import { ProjectSettings } from '../models/ProjectSettings';
 
 export class ProjectController {
   private storageRepository: StorageRepository;
@@ -10,11 +10,16 @@ export class ProjectController {
   }
 
   createProject = async (req: Request, res: Response) => {
+    const projectSettings: ProjectSettings = req.body;
+
+    console.log('Project Settings: ', projectSettings);
+
     try {
       console.log('Creating project');
-      const projectId = uuidv4();
-      const result =
-        await this.storageRepository.createNewProjectFromTemplate();
+
+      const result = await this.storageRepository.createNewProjectFromTemplate(
+        projectSettings
+      );
 
       res.status(200).json({
         success: true,

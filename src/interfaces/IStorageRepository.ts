@@ -1,3 +1,7 @@
+import { ProjectSettings } from '../models/ProjectSettings';
+
 export interface IStorageRepository {
-  createNewProjectFromTemplate(): Promise<{ projectId: string }>;
+  createNewProjectFromTemplate(
+    projectSettings: ProjectSettings
+  ): Promise<{ projectId: string }>;
 }

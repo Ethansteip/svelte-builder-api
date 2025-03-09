@@ -6,26 +6,44 @@ import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '../utils/supabase';
 import { IStorageRepository } from '../interfaces/IStorageRepository';
 import AdmZip from 'adm-zip';
+import { ProjectSettings } from '../models/ProjectSettings';
 
 export class StorageRepository implements IStorageRepository {
   private readonly git = simpleGit();
-  private readonly TEMPLATE_REPO = 'git@github.com:Ethansteip/base.git';
+  private readonly SHAD_TEMPLATE_REPO = 'git@github.com:Ethansteip/base.git';
+  private readonly DAISY_TEMPLATE_REPO =
+    'git@github.com:Ethansteip/daisyui-base.git';
 
-  async createNewProjectFromTemplate() {
+  async createNewProjectFromTemplate(projectSettings: ProjectSettings) {
     const projectId = uuidv4();
     const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'svelte-builder-'));
     const projectPath = path.join(tempDir, projectId);
+    const { uiLibrary, theme, font, selectedPages } = projectSettings;
+    const shad = uiLibrary === 'shad';
 
     try {
-      console.log(`Creating new project ${projectId} in ${projectPath}`);
+      // Clone the template repository based on the ui library chosen
+      if (shad) {
+        console.log('Cloning Shad template repository');
+        await this.git.clone(this.SHAD_TEMPLATE_REPO, projectPath);
+      } else if (uiLibrary === 'daisy') {
+        console.log('Cloning Daisy template repository');
+        await this.git.clone(this.DAISY_TEMPLATE_REPO, projectPath);
+      }
 
-      // Clone the template repository
-      await this.git.clone(this.TEMPLATE_REPO, projectPath);
-      console.log('Template repository cloned successfully');
-
-      // Remove .git directory
+      // Remove existing .git directory
       await fs.rm(path.join(projectPath, '.git'), { recursive: true });
-      console.log('Removed .git directory');
+
+      // If Shad, Setup Theme
+      if (shad) {
+        // find file under /lib/themes that matches project settings theme
+        // copy contents
+        // and overwrite app.css file in project root with contents
+      }
+
+      // Add font
+
+      // Trim pages
 
       // Create zip file
       const zip = new AdmZip();
