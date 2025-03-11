@@ -24,10 +24,8 @@ export class StorageRepository implements IStorageRepository {
     try {
       // Clone the template repository based on the ui library chosen
       if (shad) {
-        console.log('Cloning Shad template repository');
         await this.git.clone(this.SHAD_TEMPLATE_REPO, projectPath);
       } else if (uiLibrary === 'daisy') {
-        console.log('Cloning Daisy template repository');
         await this.git.clone(this.DAISY_TEMPLATE_REPO, projectPath);
       }
 
@@ -36,12 +34,53 @@ export class StorageRepository implements IStorageRepository {
 
       // If Shad, Setup Theme
       if (shad) {
-        // find file under /lib/themes that matches project settings theme
-        // copy contents
-        // and overwrite app.css file in project root with contents
+        const themesPath = path.join(projectPath, 'src', 'lib', 'themes');
+        const selectedThemePath = path.join(themesPath, `${theme}.css`);
+        const appCssPath = path.join(projectPath, 'src', 'app.css');
+
+        // Read the selected theme file
+        const themeContent = await fs.readFile(selectedThemePath, 'utf-8');
+
+        // Write theme content to app.css
+        await fs.writeFile(appCssPath, themeContent);
+
+        // Remove the themes directory
+        await fs.rm(themesPath, { recursive: true });
       }
 
       // Add font
+      if (font) {
+        console.log('FONT: ', font);
+        // Update package.json to add the font dependency
+        const packageJsonPath = path.join(projectPath, 'package.json');
+        const packageJson = JSON.parse(
+          await fs.readFile(packageJsonPath, 'utf-8')
+        );
+
+        if (!font.variable) {
+          packageJson.dependencies[`@fontsource/${font.name}`] = '^5.1.0';
+        } else {
+          packageJson.dependencies[`@fontsource-variable/${font.name}`] =
+            '^5.1.0';
+        }
+
+        await fs.writeFile(
+          packageJsonPath,
+          JSON.stringify(packageJson, null, 2)
+        );
+
+        // Add font import to app.css
+        const appCssPath = path.join(projectPath, 'src', 'app.css');
+        const fontImport = `@import '@fontsource${
+          font.variable ? '-variable' : ''
+        }/${font.name}';\n`;
+        const existingCss = await fs.readFile(appCssPath, 'utf-8');
+        await fs.writeFile(appCssPath, fontImport + existingCss);
+
+        // Add font-family to the :root or body in app.css
+        const fontFamilyRule = `\n\n:root {\n  ${font.fontFamily}\n}\n`;
+        await fs.appendFile(appCssPath, fontFamilyRule);
+      }
 
       // Trim pages
 
