@@ -10,7 +10,8 @@ import { ProjectSettings } from '../models/ProjectSettings';
 
 export class StorageRepository implements IStorageRepository {
   private readonly git = simpleGit();
-  private readonly SHAD_TEMPLATE_REPO = 'git@github.com:Ethansteip/base.git';
+  private readonly SHAD_TEMPLATE_REPO =
+    'git@github.com:Ethansteip/shad-base.git';
   private readonly DAISY_TEMPLATE_REPO =
     'git@github.com:Ethansteip/daisyui-base.git';
 
@@ -50,7 +51,6 @@ export class StorageRepository implements IStorageRepository {
 
       // Add font
       if (font) {
-        console.log('FONT: ', font);
         // Update package.json to add the font dependency
         const packageJsonPath = path.join(projectPath, 'package.json');
         const packageJson = JSON.parse(
@@ -63,6 +63,14 @@ export class StorageRepository implements IStorageRepository {
           packageJson.dependencies[`@fontsource-variable/${font.name}`] =
             '^5.1.0';
         }
+
+        delete packageJson.dependencies['_comment'];
+
+        // Add project name to package.json
+        packageJson.name = projectSettings.projectName
+          .toLowerCase()
+          .split(' ')
+          .join('-');
 
         await fs.writeFile(
           packageJsonPath,
@@ -83,6 +91,159 @@ export class StorageRepository implements IStorageRepository {
       }
 
       // Trim pages
+      const routesPath = path.join(projectPath, 'src', 'routes');
+
+      // Handle landing pages
+      const landingPath = path.join(routesPath, 'landing');
+      if (
+        await fs
+          .access(landingPath)
+          .then(() => true)
+          .catch(() => false)
+      ) {
+        const landingEntries = await fs.readdir(landingPath, {
+          withFileTypes: true
+        });
+
+        // If a landing page is selected, move it to root route
+        if (projectSettings.selectedPages.landing) {
+          const selectedVariant = projectSettings.selectedPages.landing.href;
+          const selectedLandingPath = path.join(landingPath, selectedVariant);
+
+          // Move the +page.svelte from selected landing variant to root route
+          await fs.copyFile(
+            path.join(selectedLandingPath, '+page.svelte'),
+            path.join(routesPath, '+page.svelte')
+          );
+
+          // Remove the other components folder if not using mobile-app landing
+          if (selectedVariant !== 'mobile-app') {
+            const otherComponentsPath = path.join(
+              projectPath,
+              'src',
+              'lib',
+              'components',
+              'other'
+            );
+            if (
+              await fs
+                .access(otherComponentsPath)
+                .then(() => true)
+                .catch(() => false)
+            ) {
+              await fs.rm(otherComponentsPath, { recursive: true });
+            }
+          }
+        }
+
+        for (const entry of landingEntries) {
+          if (
+            entry.isDirectory() &&
+            entry.name !== projectSettings.selectedPages.landing?.href
+          ) {
+            await fs.rm(path.join(landingPath, entry.name), {
+              recursive: true
+            });
+          }
+        }
+        // Remove the entire landing directory after moving the selected page to root
+        await fs.rm(landingPath, { recursive: true });
+      }
+
+      // Handle auth pages
+      const authPath = path.join(routesPath, 'auth');
+      if (
+        await fs
+          .access(authPath)
+          .then(() => true)
+          .catch(() => false)
+      ) {
+        const authEntries = await fs.readdir(authPath, { withFileTypes: true });
+
+        // If an auth page is selected, move it to root of auth directory
+        if (projectSettings.selectedPages.auth) {
+          const selectedVariant = projectSettings.selectedPages.auth.href;
+          const selectedAuthPath = path.join(authPath, selectedVariant);
+
+          try {
+            // First verify the source file exists and has content
+            const sourcePath = path.join(selectedAuthPath, '+page.svelte');
+            const sourceContent = await fs.readFile(sourcePath, 'utf-8');
+
+            // Write the content to the destination
+            const destPath = path.join(authPath, '+page.svelte');
+            await fs.writeFile(destPath, sourceContent);
+
+            // Verify the write was successful
+            const destContent = await fs.readFile(destPath, 'utf-8');
+            console.log('Auth dest content:', destContent.substring(0, 100)); // Log first 100 chars
+          } catch (err) {
+            console.error('Error copying auth page:', err);
+          }
+        }
+
+        // Clean up variant directories
+        for (const entry of authEntries) {
+          if (entry.isDirectory()) {
+            await fs.rm(path.join(authPath, entry.name), { recursive: true });
+          }
+        }
+
+        if (!projectSettings.selectedPages.auth) {
+          await fs.rm(authPath, { recursive: true });
+        }
+      }
+
+      // Handle account pages
+      const accountPath = path.join(routesPath, 'account');
+      if (
+        await fs
+          .access(accountPath)
+          .then(() => true)
+          .catch(() => false)
+      ) {
+        const accountEntries = await fs.readdir(accountPath, {
+          withFileTypes: true
+        });
+
+        // If an account page is selected, move it to root of account directory
+        if (projectSettings.selectedPages.account) {
+          const selectedVariant = projectSettings.selectedPages.account.href;
+          const selectedAccountPath = path.join(accountPath, selectedVariant);
+
+          try {
+            // First verify the source file exists and has content
+            const sourcePath = path.join(selectedAccountPath, '+page.svelte');
+            const sourceContent = await fs.readFile(sourcePath, 'utf-8');
+
+            // Write the content to the destination
+            const destPath = path.join(accountPath, '+page.svelte');
+            await fs.writeFile(destPath, sourceContent);
+
+            // Verify the write was successful
+            const destContent = await fs.readFile(destPath, 'utf-8');
+          } catch (err) {
+            console.error('Error copying account page:', err);
+          }
+        }
+
+        // Clean up variant directories
+        for (const entry of accountEntries) {
+          if (entry.isDirectory()) {
+            await fs.rm(path.join(accountPath, entry.name), {
+              recursive: true
+            });
+          }
+        }
+
+        if (!projectSettings.selectedPages.account) {
+          await fs.rm(accountPath, { recursive: true });
+        }
+      }
+
+      // Add .env file
+      const envContent = `PUBLIC_APP_NAME=${projectSettings.projectName}\n`;
+      await fs.writeFile(path.join(projectPath, '.env'), envContent);
 
       // Create zip file
       const zip = new AdmZip();
