@@ -13,7 +13,7 @@ export class StorageRepository implements IStorageRepository {
   private readonly SHAD_TEMPLATE_REPO =
     'git@github.com:Ethansteip/shad-base.git';
   private readonly DAISY_TEMPLATE_REPO =
-    'git@github.com:Ethansteip/daisyui-base.git';
+    'git@github.com:Ethansteip/daisy-base.git';
 
   async createNewProjectFromTemplate(projectSettings: ProjectSettings) {
     const projectId = uuidv4();
@@ -47,6 +47,12 @@ export class StorageRepository implements IStorageRepository {
 
         // Remove the themes directory
         await fs.rm(themesPath, { recursive: true });
+      } else if (uiLibrary === 'daisy') {
+        // Setup DaisyUI theme
+        const appCssPath = path.join(projectPath, 'src', 'app.css');
+        const existingCss = await fs.readFile(appCssPath, 'utf-8');
+        const daisyThemeContent = `${existingCss}\n\n@plugin "daisyui" {\n\tthemes: ${theme} --default;\n}\n`;
+        await fs.writeFile(appCssPath, daisyThemeContent);
       }
 
       // Add font
@@ -64,7 +70,9 @@ export class StorageRepository implements IStorageRepository {
             '^5.1.0';
         }
 
-        delete packageJson.dependencies['_comment'];
+        if (shad) {
+          delete packageJson.dependencies['_comment'];
+        }
 
         // Add project name to package.json
         packageJson.name = projectSettings.projectName
@@ -117,7 +125,7 @@ export class StorageRepository implements IStorageRepository {
           );
 
           // Remove the other components folder if not using mobile-app landing
-          if (selectedVariant !== 'mobile-app') {
+          if (selectedVariant !== 'mobile-app' && shad) {
             const otherComponentsPath = path.join(
               projectPath,
               'src',
