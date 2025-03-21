@@ -125,7 +125,7 @@ export class StorageRepository implements IStorageRepository {
           );
 
           // Remove the other components folder if not using mobile-app landing
-          if (selectedVariant !== 'mobile-app' && shad) {
+          if (selectedVariant !== 'mobile-app') {
             const otherComponentsPath = path.join(
               projectPath,
               'src',
