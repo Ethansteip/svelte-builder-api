@@ -9,21 +9,20 @@ if (process.env.NODE_ENV !== 'production') {
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const isDevelopment = process.env.NODE_ENV !== 'production';
 
 // CORS configuration
-// const corsOptions = {
-//   origin: isDevelopment
-//     ? ['http://localhost:5173', 'http://localhost:5174'] // Add any other local dev URLs
-//     : ['https://your-production-domain.com'], // Production URLs
-//   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-//   allowedHeaders: ['Content-Type', 'Authorization'],
-//   credentials: true
-// };
-
-app.use(cors({ origin: true }));
+const corsOptions = {
+  origin: isDevelopment
+    ? ['http://localhost:5173']
+    : ['https://svelte-forge-production.up.railway.app'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+};
 
 // Apply CORS middleware
-// app.use(cors(corsOptions));
+app.use(cors(corsOptions));
 
 // Middleware
 app.use(express.json());

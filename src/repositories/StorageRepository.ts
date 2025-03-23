@@ -7,9 +7,15 @@ import { supabase } from '../utils/supabase';
 import { IStorageRepository } from '../interfaces/IStorageRepository';
 import AdmZip from 'adm-zip';
 import { ProjectSettings } from '../models/ProjectSettings';
+import { config } from 'dotenv';
+
+config();
 
 export class StorageRepository implements IStorageRepository {
   private readonly git = simpleGit();
+  private readonly SUPABASE_STORAGE_PROJECT_BUCKET_PATH =
+    process.env.SUPABASE_STORAGE_PROJECT_BUCKET_PATH;
+  private readonly environment = process.env.NODE_ENV;
   private readonly SHAD_TEMPLATE_REPO =
     'git@github.com:Ethansteip/shad-base.git';
   private readonly DAISY_TEMPLATE_REPO =
@@ -19,7 +25,8 @@ export class StorageRepository implements IStorageRepository {
     const projectId = uuidv4();
     const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'svelte-builder-'));
     const projectPath = path.join(tempDir, projectId);
-    const { uiLibrary, theme, font, selectedPages } = projectSettings;
+    const { uiLibrary, theme, font, selectedPages, projectName } =
+      projectSettings;
     const shad = uiLibrary === 'shad';
 
     try {
@@ -259,16 +266,42 @@ export class StorageRepository implements IStorageRepository {
       const zipBuffer = zip.toBuffer();
 
       // Upload zip to Supabase
-      const { error } = await supabase.storage
-        .from('svelte-5')
-        .upload(`projects/${projectId}.zip`, zipBuffer);
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('projects')
+        .upload(
+          `${
+            this.SUPABASE_STORAGE_PROJECT_BUCKET_PATH
+          }/${projectId}/${projectName.toLowerCase().split(' ').join('_')}.zip`,
+          zipBuffer
+        );
 
-      if (error) throw error;
+      if (uploadError) throw Error;
+
+      const storagePath = uploadData?.path;
+
+      /// upload project details to projects table
+      const { data: insertData, error: insertError } = await supabase
+        .from('projects')
+        .insert({
+          project_name: projectName,
+          ui_library: uiLibrary,
+          environment: this.environment,
+          project_uuid: projectId,
+          project_configuration: projectSettings,
+          project_storage_path: storagePath
+        });
+
+      if (insertError) throw Error;
 
       // Get download URL for zip
       const { data } = await supabase.storage
-        .from('svelte-5')
-        .createSignedUrl(`projects/${projectId}.zip`, 60);
+        .from('projects')
+        .createSignedUrl(
+          `${
+            this.SUPABASE_STORAGE_PROJECT_BUCKET_PATH
+          }/${projectId}/${projectName.toLowerCase().split(' ').join('_')}.zip`,
+          3600
+        );
 
       // Cleanup
       await fs.rm(tempDir, { recursive: true });
@@ -284,15 +317,6 @@ export class StorageRepository implements IStorageRepository {
       }
       throw error;
     }
-  }
-
-  private async getDownloadUrl(projectId: string) {
-    const { data } = await supabase.storage
-      .from('svelte-5')
-      .createSignedUrl(`projects/${projectId}/README.md`, 60, {
-        download: true
-      });
-    return data;
   }
 
   private async uploadDirectoryToSupabase(
