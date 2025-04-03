@@ -16,7 +16,7 @@ const isDevelopment = process.env.NODE_ENV !== 'production';
 const corsOptions = {
   origin: isDevelopment
     ? ['http://localhost:5173']
-    : ['https://svelte-forge-production.up.railway.app'],
+    : ['https://kit-forge.com/'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
