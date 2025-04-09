@@ -12,12 +12,8 @@ export class ProjectController {
 
   createProject = async (req: Request, res: Response) => {
     const projectSettings: ProjectSettings = req.body;
-
-    console.log('Project Settings: ', projectSettings);
-
+    console.log('Creating project...');
     try {
-      console.log('Creating project');
-
       const result = await this.storageRepository.createNewProjectFromTemplate(
         projectSettings
       );
@@ -28,6 +24,7 @@ export class ProjectController {
         downloadUrl: result.downloadUrl
       });
     } catch (error) {
+      console.error(JSON.stringify(error, null, 2));
       res.status(500).json({
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error'

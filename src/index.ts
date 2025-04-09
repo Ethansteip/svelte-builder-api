@@ -1,8 +1,8 @@
 import express from 'express';
 import { config } from 'dotenv';
-import projectRoutes from './routes/projects';
-import emailRoutes from './routes/email';
 import cors from 'cors';
+import routes from './routes';
+import ErrorMiddleware from './middleware/errorMiddleware';
 
 if (process.env.NODE_ENV !== 'production') {
   config();
@@ -31,25 +31,13 @@ app.use(cors(corsOptions));
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+// Apply all routes
+app.use('/', routes);
 
-// Routes
-app.use('/projects', projectRoutes);
-app.use('/submit-email', emailRoutes);
-app.get('/hello-world', (req, res) =>
-  res.status(200).json({ message: 'Hello World' })
-);
+// 404 handler for undefined routes
+app.use(ErrorMiddleware.notFound);
 
-// Basic error handling
-app.use(
-  (
-    err: Error,
-    req: express.Request,
-    res: express.Response,
-    next: express.NextFunction
-  ) => {
-    console.error(err.stack);
-    res.status(500).send('Something broke!');
-  }
-);
+// Error handler
+app.use(ErrorMiddleware.handleError);
 
 app.listen(PORT, () => console.log(`API available on port ${PORT}`));

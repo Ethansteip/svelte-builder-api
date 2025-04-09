@@ -1,9 +1,12 @@
+import { Font } from './Font';
 import { Page } from './Page';
+import { ProjectName } from './ProjectName';
 
 export interface ProjectSettings {
-  projectName: string;
+  name: ProjectName;
   theme: string;
-  font: { name: string; fontFamily: string; variable: boolean };
-  uiLibrary: string;
-  selectedPages: { landing: Page; auth: Page; account: Page };
+  font: Font;
+  uiLibrary: 'shad' | 'daisy';
+  pages: Page[];
+  authProvider?: 'supabase' | 'pocketbase';
 }
