@@ -1,26 +1,58 @@
 import fs from 'fs/promises';
 import path from 'path';
+import { StorageRepository } from '../repositories/StorageRepository';
 
 export class ThemeUtils {
+  private storageRepository: StorageRepository;
+
+  private static readonly SHAD_THEME_PATH = 'shad/themes';
+  private static readonly DAISY_THEME_PATH = 'daisy/themes';
+
+  constructor() {
+    this.storageRepository = new StorageRepository();
+  }
+
+  public async setupBaseTheme(
+    projectPath: string,
+    uiLibrary: string,
+    theme: string
+  ) {
+    try {
+      if (uiLibrary === 'shad') {
+        await ThemeUtils.setupShadTheme(projectPath, theme);
+        return true;
+      } else if (uiLibrary === 'daisy') {
+        await ThemeUtils.setupDaisyTheme(projectPath, theme);
+        return true;
+      } else {
+        throw new Error(`Unsupported UI library: ${theme}`);
+      }
+    } catch (error) {
+      console.error('Error setting up base theme:', error);
+      throw new Error('Error setting up base theme');
+    }
+  }
+
   static async setupShadTheme(
     projectPath: string,
     theme: string
   ): Promise<void> {
-    // find the themes directory
-    const themesPath = path.join(projectPath, 'src', 'lib', 'themes');
-    // find the selected theme file
-    const selectedThemePath = path.join(themesPath, `${theme}.css`);
+    const storageRepository = new StorageRepository();
+
+    // Fetch theme from storage
+    const themeContent = await storageRepository.getFromStorage(
+      this.SHAD_THEME_PATH,
+      `${theme}.css`
+    );
+
+    // Convert Blob to string
+    const themeContentString = await themeContent.text();
+
     // find the app.css file
     const appCssPath = path.join(projectPath, 'src', 'app.css');
 
-    // Read the selected theme file
-    const themeContent = await fs.readFile(selectedThemePath, 'utf-8');
-
     // Write theme content to app.css
-    await fs.writeFile(appCssPath, themeContent);
-
-    // Remove the themes directory
-    await fs.rm(themesPath, { recursive: true });
+    await fs.writeFile(appCssPath, themeContentString);
   }
 
   static async setupDaisyTheme(

@@ -1,27 +1,26 @@
 import { Request, Response } from 'express';
-import { StorageRepository } from '../repositories/StorageRepository';
+import { ProjectRepository } from '../repositories/ProjectRepository';
 import { ProjectSettings } from '../models/ProjectSettings';
 import { supabase } from '../utils/supabase';
 
 export class ProjectController {
-  private storageRepository: StorageRepository;
+  private projectRepository: ProjectRepository;
 
   constructor() {
-    this.storageRepository = new StorageRepository();
+    this.projectRepository = new ProjectRepository();
   }
 
   createProject = async (req: Request, res: Response) => {
     const projectSettings: ProjectSettings = req.body;
     console.log('Creating project...');
     try {
-      const result = await this.storageRepository.createNewProjectFromTemplate(
+      const result = await this.projectRepository.createProject(
         projectSettings
       );
 
       res.status(200).json({
         success: true,
-        projectId: result.projectId,
-        downloadUrl: result.downloadUrl
+        message: 'Project created successfully'
       });
     } catch (error) {
       console.error(JSON.stringify(error, null, 2));

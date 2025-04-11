@@ -12,9 +12,11 @@ export class FontUtils {
   static async setupFont(
     projectPath: string,
     font: Font,
-    isShad: boolean
+    uiLibrary: 'shad' | 'daisy'
   ): Promise<void> {
-    if (!font) return;
+    if (!font.name) {
+      throw new Error('Font is required');
+    }
 
     // Add font dependency to package.json
     const fontPackageName = font.variable
@@ -38,8 +40,10 @@ export class FontUtils {
     await fs.appendFile(appCssPath, fontFamilyRule);
 
     // If Shad, remove _comment from package.json
-    if (isShad) {
+    if (uiLibrary === 'shad') {
       const packageJson = await PackageJsonUtils.readPackageJson(projectPath);
+      // this is a placeholder to keep the devDependencies object in place
+      // while there is nothin in it
       delete packageJson.dependencies['_comment'];
       await PackageJsonUtils.writePackageJson(projectPath, packageJson);
     }
