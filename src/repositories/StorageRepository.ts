@@ -8,6 +8,7 @@ export class StorageRepository implements StorageRepositoryInterface {
       .download(fileName);
 
     if (error) {
+      console.error(error);
       throw new Error(error.message);
     }
 

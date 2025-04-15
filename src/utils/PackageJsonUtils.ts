@@ -8,13 +8,13 @@ export interface PackageJson {
 }
 
 export class PackageJsonUtils {
-  static async readPackageJson(projectPath: string): Promise<PackageJson> {
+  public async readPackageJson(projectPath: string): Promise<PackageJson> {
     const packageJsonPath = path.join(projectPath, 'package.json');
     const packageJsonContent = await fs.readFile(packageJsonPath, 'utf-8');
     return JSON.parse(packageJsonContent);
   }
 
-  static async writePackageJson(
+  public async writePackageJson(
     projectPath: string,
     packageJson: PackageJson
   ): Promise<void> {
@@ -22,7 +22,7 @@ export class PackageJsonUtils {
     await fs.writeFile(packageJsonPath, JSON.stringify(packageJson, null, 2));
   }
 
-  static async addDependency(
+  public async addDependency(
     projectPath: string,
     packageName: string,
     version: string
@@ -32,7 +32,16 @@ export class PackageJsonUtils {
     await this.writePackageJson(projectPath, packageJson);
   }
 
-  static async updateProjectName(
+  public async removeDependency(
+    projectPath: string,
+    packageName: string
+  ): Promise<void> {
+    const packageJson = await this.readPackageJson(projectPath);
+    delete packageJson.dependencies[packageName];
+    await this.writePackageJson(projectPath, packageJson);
+  }
+
+  public async updateProjectName(
     projectPath: string,
     name: string
   ): Promise<void> {

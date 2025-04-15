@@ -2,12 +2,18 @@ import fs from 'fs/promises';
 import path from 'path';
 import { Page } from '../models/Page';
 import { StorageRepository } from '../repositories/StorageRepository';
+import { AssetsUtils } from './AssetsUtils';
+import { ComponentsUtils } from './ComponentsUtils';
 
 export class PagesUtils {
   private storageRepository: StorageRepository;
+  private assetsUtils: AssetsUtils;
+  private componentsUtils: ComponentsUtils;
 
   constructor() {
     this.storageRepository = new StorageRepository();
+    this.assetsUtils = new AssetsUtils();
+    this.componentsUtils = new ComponentsUtils();
   }
 
   private async createRoute(
@@ -31,6 +37,7 @@ export class PagesUtils {
     const storagePath = `${uiLibrary}/pages/${
       authProvider ? authProvider : 'base'
     }/${page.categoryName}/${page.name}`;
+
     const pageContent = await this.storageRepository.getFromStorage(
       storagePath,
       `+page.svelte`
@@ -54,12 +61,14 @@ export class PagesUtils {
     try {
       // Handle landing page separately since it goes in the root
       const landingPage = pages.find((page) => page.categoryName === 'landing');
+
       if (landingPage) {
         const content = await this.fetchPageContent(
           uiLibrary,
           landingPage,
           authProvider
         );
+
         const routesPath = path.join(projectPath, 'src', 'routes');
         await fs.mkdir(routesPath, { recursive: true });
         await fs.writeFile(
@@ -67,6 +76,18 @@ export class PagesUtils {
           content,
           'utf-8'
         );
+
+        // Add assets and components for landing page
+        if (landingPage.assets) {
+          await this.assetsUtils.addAssets(projectPath, landingPage.assets);
+        }
+        if (landingPage.components) {
+          await this.componentsUtils.addComponents(
+            projectPath,
+            uiLibrary,
+            landingPage.components
+          );
+        }
       }
 
       // Handle all other pages
@@ -78,6 +99,7 @@ export class PagesUtils {
             projectPath,
             page.categoryName
           );
+
           const content = await this.fetchPageContent(
             uiLibrary,
             page,
@@ -90,6 +112,18 @@ export class PagesUtils {
             content,
             'utf-8'
           );
+
+          // Add assets and components for the page
+          if (page.assets) {
+            await this.assetsUtils.addAssets(projectPath, page.assets);
+          }
+          if (page.components) {
+            await this.componentsUtils.addComponents(
+              projectPath,
+              uiLibrary,
+              page.components
+            );
+          }
 
           // Clean up any variant directories
           const routeEntries = await fs.readdir(routePath, {

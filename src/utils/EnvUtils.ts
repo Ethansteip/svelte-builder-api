@@ -21,7 +21,7 @@ export class EnvUtils {
     await fs.writeFile(envPath, envContent);
   }
 
-  static async addEnvVariable(
+  public async addEnvVariable(
     projectPath: string,
     key: string,
     value: string
@@ -47,8 +47,8 @@ export class EnvUtils {
       } else {
         // Add new variable
         const newContent = existingContent
-          ? `${existingContent}\n${key}=${value}`
-          : `${key}=${value}`;
+          ? `${existingContent}\n${key}="${value}"`
+          : `${key}="${value}"`;
         await fs.writeFile(envPath, newContent);
       }
     } catch (error) {

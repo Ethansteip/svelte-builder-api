@@ -13,10 +13,10 @@ import { FontUtils } from '../utils/FontUtils';
 import { PackageJsonUtils } from '../utils/PackageJsonUtils';
 import { PagesUtils } from '../utils/PagesUtils';
 import { EnvUtils } from '../utils/EnvUtils';
-
+import { AuthenticationProvider } from './AuthenticationProvider';
 config();
 
-export class ProjectRepository {
+export class ProjectRepository implements ProjectRepositoryInterface {
   private readonly git = simpleGit();
   private readonly SUPABASE_STORAGE_PROJECT_BUCKET_PATH =
     process.env.SUPABASE_STORAGE_PROJECT_BUCKET_PATH;
@@ -27,10 +27,16 @@ export class ProjectRepository {
     'git@github.com:Ethansteip/daisy-base.git';
   private ThemeUtils: ThemeUtils;
   private PagesUtils: PagesUtils;
+  private EnvUtils: EnvUtils;
+  private FontUtils: FontUtils;
+  private PackageJsonUtils: PackageJsonUtils;
 
   constructor() {
     this.ThemeUtils = new ThemeUtils();
     this.PagesUtils = new PagesUtils();
+    this.EnvUtils = new EnvUtils();
+    this.FontUtils = new FontUtils();
+    this.PackageJsonUtils = new PackageJsonUtils();
   }
 
   async createProject(projectSettings: ProjectSettings) {
@@ -51,10 +57,10 @@ export class ProjectRepository {
       await this.ThemeUtils.setupBaseTheme(projectPath, uiLibrary, theme);
 
       // Add font
-      await FontUtils.setupFont(projectPath, font, uiLibrary);
+      await this.FontUtils.setupFont(projectPath, font);
 
       // Update the proejct name in package.json
-      await PackageJsonUtils.updateProjectName(
+      await this.PackageJsonUtils.updateProjectName(
         projectPath,
         projectSettings.name.fileName
       );
@@ -71,6 +77,13 @@ export class ProjectRepository {
       await EnvUtils.createEnvFile(projectPath, {
         PUBLIC_APP_NAME: projectSettings.name.clientName
       });
+
+      // Add auth provider
+      if (projectSettings.authProvider === 'supabase') {
+        await new AuthenticationProvider(projectPath).addSupabase();
+      } else if (projectSettings.authProvider === 'pocketbase') {
+        console.log('Pocketbase not implemented yet');
+      }
 
       // Create zip file
       const zip = new AdmZip();

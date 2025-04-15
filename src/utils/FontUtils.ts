@@ -1,29 +1,37 @@
 import fs from 'fs/promises';
 import path from 'path';
+import { Font } from '../models/Font';
 import { PackageJsonUtils } from './PackageJsonUtils';
 
-export interface Font {
-  name: string;
-  variable?: boolean;
-  fontFamily: string;
-}
-
 export class FontUtils {
-  static async setupFont(
-    projectPath: string,
-    font: Font,
-    uiLibrary: 'shad' | 'daisy'
-  ): Promise<void> {
+  private readonly packageJsonUtils: PackageJsonUtils;
+
+  constructor() {
+    this.packageJsonUtils = new PackageJsonUtils();
+  }
+
+  public async setupFont(projectPath: string, font: Font): Promise<void> {
     if (!font.name) {
       throw new Error('Font is required');
     }
 
-    // Add font dependency to package.json
+    // If the font is Cabin, return early as it's already set as default
+    if (font.name.toLowerCase() === 'cabin') {
+      return;
+    }
+
+    // Remove the default Cabin font dependency
+    await this.packageJsonUtils.removeDependency(
+      projectPath,
+      '@fontsource-variable/cabin'
+    );
+
+    // Add new font dependency to package.json
     const fontPackageName = font.variable
       ? `@fontsource-variable/${font.name}`
       : `@fontsource/${font.name}`;
 
-    await PackageJsonUtils.addDependency(
+    await this.packageJsonUtils.addDependency(
       projectPath,
       fontPackageName,
       '^5.1.0'
@@ -38,14 +46,5 @@ export class FontUtils {
     // Add font-family to the :root in app.css
     const fontFamilyRule = `\n\n:root {\n  ${font.fontFamily}\n}\n`;
     await fs.appendFile(appCssPath, fontFamilyRule);
-
-    // If Shad, remove _comment from package.json
-    if (uiLibrary === 'shad') {
-      const packageJson = await PackageJsonUtils.readPackageJson(projectPath);
-      // this is a placeholder to keep the devDependencies object in place
-      // while there is nothin in it
-      delete packageJson.dependencies['_comment'];
-      await PackageJsonUtils.writePackageJson(projectPath, packageJson);
-    }
   }
 }
