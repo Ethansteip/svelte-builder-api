@@ -80,7 +80,7 @@ export class ProjectRepository implements ProjectRepositoryInterface {
 
       // Add auth provider
       if (projectSettings.authProvider === 'supabase') {
-        await new AuthenticationProvider(projectPath).addSupabase();
+        await new AuthenticationProvider(projectPath).addSupabase(uiLibrary);
       } else if (projectSettings.authProvider === 'pocketbase') {
         console.log('Pocketbase not implemented yet');
       }

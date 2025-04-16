@@ -92,7 +92,10 @@ export class PagesUtils {
 
       // Handle all other pages
       for (const page of pages) {
-        if (page.categoryName === 'landing') continue; // Skip landing page as it's handled above
+        // Skip landing page as it's handled above
+        if (page.categoryName === 'landing') {
+          continue;
+        }
 
         try {
           const routePath = await this.createRoute(
