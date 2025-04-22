@@ -59,7 +59,7 @@ export class ProjectRepository implements ProjectRepositoryInterface {
       // Add font
       await this.FontUtils.setupFont(projectPath, font);
 
-      // Update the proejct name in package.json
+      // Update the project name in package.json
       await this.PackageJsonUtils.updateProjectName(
         projectPath,
         projectSettings.name.fileName
