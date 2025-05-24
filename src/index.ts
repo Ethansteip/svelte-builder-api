@@ -31,6 +31,7 @@ app.use(cors(corsOptions));
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
 // Apply all routes
 app.use('/', routes);
 

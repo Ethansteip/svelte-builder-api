@@ -25,6 +25,14 @@ export class ProjectRepository implements ProjectRepositoryInterface {
     'git@github.com:Ethansteip/shad-base-v2.git';
   private readonly DAISY_BASE_TEMPLATE_REPO =
     'git@github.com:Ethansteip/daisy-base.git';
+  private readonly SHAD_SUPABASE_TEMPLATE_REPO =
+    'git@github.com:Ethansteip/shad-supabase.git';
+  private readonly SHAD_POCKETBASE_TEMPLATE_REPO =
+    'git@github.com:Ethansteip/shad-pocketbase.git';
+  private readonly DAISY_SUPABASE_TEMPLATE_REPO =
+    'git@github.com:Ethansteip/daisy-supabase.git';
+  private readonly DAISY_POCKETBASE_TEMPLATE_REPO =
+    'git@github.com:Ethansteip/daisy-pocketbase.git';
   private ThemeUtils: ThemeUtils;
   private PagesUtils: PagesUtils;
   private EnvUtils: EnvUtils;
@@ -43,12 +51,20 @@ export class ProjectRepository implements ProjectRepositoryInterface {
     const projectId = uuidv4();
     const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'svelte-builder-'));
     const projectPath = path.join(tempDir, projectId);
-    const { uiLibrary, theme, font, pages, name } = projectSettings;
+    const { uiLibrary, theme, font, pages, name, authProvider } =
+      projectSettings;
     const shad = uiLibrary === 'shad';
 
     try {
       // Clone the template repository based on the ui library chosen
-      const templateRepo = await this.getTemplateRepo(uiLibrary);
+      const templateRepo = await this.getTemplateRepo(uiLibrary, authProvider);
+
+      if (!templateRepo) {
+        throw new Error(
+          'No template repository found for the given configuration'
+        );
+      }
+
       await this.git.clone(templateRepo, projectPath);
       // Remove existing .git directory
       await fs.rm(path.join(projectPath, '.git'), { recursive: true });
@@ -66,12 +82,14 @@ export class ProjectRepository implements ProjectRepositoryInterface {
       );
 
       // Setup pages - landing, auth, account, etc.
-      await this.PagesUtils.addPages(
-        projectPath,
-        uiLibrary,
-        pages,
-        projectSettings.authProvider
-      );
+      if (!authProvider) {
+        await this.PagesUtils.addPages(
+          projectPath,
+          uiLibrary,
+          pages,
+          projectSettings.authProvider
+        );
+      }
 
       // Add .env file
       await EnvUtils.createEnvFile(projectPath, {
@@ -79,9 +97,9 @@ export class ProjectRepository implements ProjectRepositoryInterface {
       });
 
       // Add auth provider
-      if (projectSettings.authProvider === 'supabase') {
+      if (authProvider === 'supabase') {
         await new AuthenticationProvider(projectPath).addSupabase(uiLibrary);
-      } else if (projectSettings.authProvider === 'pocketbase') {
+      } else if (authProvider === 'pocketbase') {
         console.log('Pocketbase not implemented yet');
       }
 
@@ -140,13 +158,37 @@ export class ProjectRepository implements ProjectRepositoryInterface {
     }
   }
 
-  private async getTemplateRepo(uiLibrary: string) {
-    if (uiLibrary === 'shad') {
-      return this.SHAD_BASE_V2_TEMPLATE_REPO;
-    } else if (uiLibrary === 'daisy') {
-      return this.DAISY_BASE_TEMPLATE_REPO;
-    } else {
-      throw new Error('Unsupported UI library');
+  private async getTemplateRepo(
+    uiLibrary: string,
+    authProvider: string | undefined
+  ) {
+    // if no auth provider specificed, select base repo.
+    if (!authProvider) {
+      if (uiLibrary === 'shad') {
+        return this.SHAD_BASE_V2_TEMPLATE_REPO;
+      } else if (uiLibrary === 'daisy') {
+        return this.DAISY_BASE_TEMPLATE_REPO;
+      } else {
+        throw new Error('Unsupported UI library');
+      }
+    }
+
+    // if auth provider is supabase, select supabase repo.
+    if (authProvider === 'supabase') {
+      if (uiLibrary === 'shad') {
+        return this.SHAD_SUPABASE_TEMPLATE_REPO;
+      } else if (uiLibrary === 'daisy') {
+        return this.DAISY_SUPABASE_TEMPLATE_REPO;
+      }
+    }
+
+    // if auth provider is pocketbase, select pocketbase repo.
+    if (authProvider === 'pocketbase') {
+      if (uiLibrary === 'shad') {
+        return this.SHAD_POCKETBASE_TEMPLATE_REPO;
+      } else if (uiLibrary === 'daisy') {
+        return this.DAISY_POCKETBASE_TEMPLATE_REPO;
+      }
     }
   }
 }

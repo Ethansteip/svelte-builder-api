@@ -50,6 +50,7 @@ export class AuthenticationProvider {
         'SUPABASE_SERVICE_ROLE_KEY',
         ''
       );
+
       await this.envUtils.addEnvVariable(this.projectPath, 'JWT_SECRET', '');
 
       // 1. Create supabase folder and files

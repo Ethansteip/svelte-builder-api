@@ -81,6 +81,7 @@ export class PagesUtils {
         if (landingPage.assets) {
           await this.assetsUtils.addAssets(projectPath, landingPage.assets);
         }
+
         if (landingPage.components) {
           await this.componentsUtils.addComponents(
             projectPath,

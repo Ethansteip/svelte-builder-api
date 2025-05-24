@@ -18,9 +18,12 @@ export class ProjectController {
         projectSettings
       );
 
+      console.log('Result: ', result);
+
       res.status(200).json({
         success: true,
-        message: 'Project created successfully'
+        message: 'Project created successfully',
+        result
       });
     } catch (error) {
       console.error(JSON.stringify(error, null, 2));
