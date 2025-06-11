@@ -1,7 +1,6 @@
 import express from 'express';
 import { config } from 'dotenv';
-import projectRoutes from './routes/projects';
-import emailRoutes from './routes/email';
+import routes from './routes';
 import cors from 'cors';
 
 if (process.env.NODE_ENV !== 'production') {
@@ -33,8 +32,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Routes
-app.use('/projects', projectRoutes);
-app.use('/submit-email', emailRoutes);
+app.use(routes);
 app.get('/hello-world', (req, res) =>
   res.status(200).json({ message: 'Hello World' })
 );
