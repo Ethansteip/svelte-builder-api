@@ -1,13 +1,14 @@
 import { Request, Response } from 'express';
 import { StorageRepository } from '../repositories/StorageRepository';
+import type { IStorageRepository } from '../interfaces/IStorageRepository';
 import { ProjectSettings } from '../models/ProjectSettings';
 import { supabase } from '../utils/supabase';
 
 export class ProjectController {
-  private storageRepository: StorageRepository;
+  private storageRepository: IStorageRepository;
 
-  constructor() {
-    this.storageRepository = new StorageRepository();
+  constructor(storageRepository: IStorageRepository = new StorageRepository()) {
+    this.storageRepository = storageRepository;
   }
 
   createProject = async (req: Request, res: Response) => {
