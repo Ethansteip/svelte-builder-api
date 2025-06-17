@@ -23,8 +23,8 @@ export class ProjectRepository implements ProjectRepositoryInterface {
   private readonly environment = process.env.NODE_ENV;
   private readonly SHAD_BASE_V2_TEMPLATE_REPO =
     'git@github.com:Ethansteip/shad-base-v2.git';
-  private readonly DAISY_BASE_TEMPLATE_REPO =
-    'git@github.com:Ethansteip/daisy-base.git';
+  private readonly DAISY_BASE_V2_TEMPLATE_REPO =
+    'git@github.com:Ethansteip/daisy-base-v2.git';
   private readonly SHAD_SUPABASE_TEMPLATE_REPO =
     'git@github.com:Ethansteip/shad-supabase.git';
   private readonly SHAD_POCKETBASE_TEMPLATE_REPO =
@@ -82,19 +82,19 @@ export class ProjectRepository implements ProjectRepositoryInterface {
       );
 
       // Setup pages - landing, auth, account, etc.
+      // TODO: create new BaseProvider class to deal with these repos.
       if (!authProvider) {
-        await this.PagesUtils.addPages(
-          projectPath,
-          uiLibrary,
-          pages,
-          projectSettings.authProvider
-        );
+        await this.PagesUtils.addPages(projectPath, uiLibrary, pages);
       }
 
       // Add .env file
-      await EnvUtils.createEnvFile(projectPath, {
-        PUBLIC_APP_NAME: projectSettings.name.clientName
-      });
+      await EnvUtils.createEnvFile(projectPath, [
+        {
+          key: 'PUBLIC_APP_NAME',
+          value: projectSettings.name.clientName,
+          type: 'string'
+        }
+      ]);
 
       // Add auth provider
       if (authProvider === 'supabase') {
@@ -167,7 +167,7 @@ export class ProjectRepository implements ProjectRepositoryInterface {
       if (uiLibrary === 'shad') {
         return this.SHAD_BASE_V2_TEMPLATE_REPO;
       } else if (uiLibrary === 'daisy') {
-        return this.DAISY_BASE_TEMPLATE_REPO;
+        return this.DAISY_BASE_V2_TEMPLATE_REPO;
       } else {
         throw new Error('Unsupported UI library');
       }

@@ -56,7 +56,7 @@ export class PagesUtils {
     projectPath: string,
     uiLibrary: string,
     pages: Page[],
-    authProvider: 'supabase' | 'pocketbase' | undefined
+    authProvider?: 'supabase' | 'pocketbase' | undefined
   ): Promise<void> {
     try {
       // Handle landing page separately since it goes in the root

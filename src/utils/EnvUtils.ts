@@ -8,13 +8,21 @@ export interface EnvVariables {
 export class EnvUtils {
   static async createEnvFile(
     projectPath: string,
-    variables: EnvVariables
+    variables: EnvVariables[],
+    type: 'string' | 'number' = 'string'
   ): Promise<void> {
     const envPath = path.join(projectPath, '.env');
 
     // Convert variables object to env file format
     const envContent = Object.entries(variables)
-      .map(([key, value]) => `${key}=${value}`)
+      .map(([key, value]) => {
+        if (type === 'string') {
+          return `${key}="${value}"`;
+        } else if (type === 'number') {
+          return `${key}=${value}`;
+        }
+        return '';
+      })
       .join('\n');
 
     // Create or overwrite the .env file

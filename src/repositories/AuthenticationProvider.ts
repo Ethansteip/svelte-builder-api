@@ -1,4 +1,3 @@
-import { PackageJsonUtils } from '../utils/PackageJsonUtils';
 import { EnvUtils } from '../utils/EnvUtils';
 import { StorageRepository } from './StorageRepository';
 import fs from 'fs/promises';
@@ -6,35 +5,19 @@ import path from 'path';
 
 export class AuthenticationProvider {
   private readonly projectPath: string;
-  private readonly packageJsonUtils: PackageJsonUtils;
   private readonly envUtils: EnvUtils;
   private readonly storageRepository: StorageRepository;
 
   constructor(projectPath: string) {
     this.projectPath = projectPath;
-    this.packageJsonUtils = new PackageJsonUtils();
     this.envUtils = new EnvUtils();
     this.storageRepository = new StorageRepository();
   }
 
   public async addSupabase(uiLibrary: string) {
-    // add dependencies
-    // @supabase/ssr
-    // @supabase/supabase-js
-
     try {
-      await this.packageJsonUtils.addDependency(
-        this.projectPath,
-        '@supabase/ssr',
-        '^0.5.2'
-      );
-      await this.packageJsonUtils.addDependency(
-        this.projectPath,
-        '@supabase/supabase-js',
-        '^2.49.3'
-      );
       // add .env variables to project
-      // anaon key, supabase url, jwt secret, service role key
+      // anon key, supabase url, service role key, and jwt secret
       await this.envUtils.addEnvVariable(
         this.projectPath,
         'PUBLIC_SUPABASE_URL',
@@ -49,25 +32,6 @@ export class AuthenticationProvider {
         this.projectPath,
         'SUPABASE_SERVICE_ROLE_KEY',
         ''
-      );
-
-      await this.envUtils.addEnvVariable(this.projectPath, 'JWT_SECRET', '');
-
-      // 1. Create supabase folder and files
-      const supabaseDir = path.join(this.projectPath, 'supabase');
-      await fs.mkdir(supabaseDir, { recursive: true });
-
-      // Create empty seed.sql
-      await fs.writeFile(path.join(supabaseDir, 'seed.sql'), '');
-
-      // Fetch and save config.toml
-      const configToml = await this.storageRepository.getFromStorage(
-        'authentication/supabase',
-        'config.toml'
-      );
-      await fs.writeFile(
-        path.join(supabaseDir, 'config.toml'),
-        await configToml.text()
       );
 
       // 2. Fetch and save hooks.server.ts

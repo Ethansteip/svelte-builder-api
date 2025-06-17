@@ -6,7 +6,6 @@ export class ThemeUtils {
   private storageRepository: StorageRepository;
 
   private static readonly SHAD_THEME_PATH = 'shad/themes';
-  private static readonly DAISY_THEME_PATH = 'daisy/themes';
 
   constructor() {
     this.storageRepository = new StorageRepository();
