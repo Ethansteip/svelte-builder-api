@@ -5,153 +5,103 @@ import { StorageRepository } from '../repositories/StorageRepository';
 import { AssetsUtils } from './AssetsUtils';
 import { ComponentsUtils } from './ComponentsUtils';
 
-export class PagesUtils {
-  private storageRepository: StorageRepository;
-  private assetsUtils: AssetsUtils;
-  private componentsUtils: ComponentsUtils;
+const storageRepository = new StorageRepository();
+const assetsUtils = new AssetsUtils();
+const componentsUtils = new ComponentsUtils();
 
-  constructor() {
-    this.storageRepository = new StorageRepository();
-    this.assetsUtils = new AssetsUtils();
-    this.componentsUtils = new ComponentsUtils();
+/**
+ * Create the directory for a route and return the path to it.
+ */
+export async function createRoute(projectPath: string, routeName: string): Promise<string> {
+  const routesPath = path.join(projectPath, 'src', 'routes');
+  const routePath = path.join(routesPath, routeName);
+  await fs.mkdir(routePath, { recursive: true });
+  return routePath;
+}
+
+/**
+ * Fetch the +page.svelte content for a given page from Supabase storage.
+ */
+export async function fetchPageContent(
+  uiLibrary: string,
+  page: Page,
+  authProvider?: string
+): Promise<string> {
+  const storagePath = `${uiLibrary}/pages/${authProvider ?? 'base'}${page.bucketPath}`;
+  const pageContent = await storageRepository.getFromStorage(storagePath, '+page.svelte');
+
+  if (!pageContent) {
+    throw new Error(`Page content not found for ${page.categoryName}/${page.name}`);
   }
 
-  private async createRoute(
-    projectPath: string,
-    routeName: string
-  ): Promise<string> {
-    const routesPath = path.join(projectPath, 'src', 'routes');
-    const routePath = path.join(routesPath, routeName);
+  return pageContent.text();
+}
 
-    // Ensure the route directory exists
-    await fs.mkdir(routePath, { recursive: true });
+/**
+ * Write content to a +page.svelte file inside the provided directory.
+ */
+export async function writePageContent(targetDir: string, content: string): Promise<void> {
+  await fs.mkdir(targetDir, { recursive: true });
+  const file = path.join(targetDir, '+page.svelte');
+  await fs.writeFile(file, content, 'utf-8');
+}
 
-    return routePath;
-  }
-
-  private async fetchPageContent(
-    uiLibrary: string,
-    page: Page,
-    authProvider: string | undefined
-  ): Promise<string> {
-    const storagePath = `${uiLibrary}/pages/${
-      authProvider ? authProvider : 'base'
-    }/${page.categoryName}/${page.name}`;
-
-    const pageContent = await this.storageRepository.getFromStorage(
-      storagePath,
-      `+page.svelte`
-    );
-
-    if (!pageContent) {
-      throw new Error(
-        `Page content not found for ${page.categoryName}/${page.name}`
-      );
+/**
+ * Remove any variant folders that do not match the given page name.
+ */
+export async function cleanRouteVariants(routePath: string, keepName: string): Promise<void> {
+  const routeEntries = await fs.readdir(routePath, { withFileTypes: true });
+  for (const entry of routeEntries) {
+    if (entry.isDirectory() && entry.name !== keepName) {
+      await fs.rm(path.join(routePath, entry.name), { recursive: true });
     }
+  }
+}
 
-    return pageContent.text();
+/**
+ * Add a single page to the project directory.
+ */
+export async function addPage(
+  projectPath: string,
+  uiLibrary: string,
+  page: Page,
+  authProvider?: 'supabase' | 'pocketbase'
+): Promise<void> {
+  const basePath = path.join(projectPath, 'src', 'routes');
+  const routePath =
+    page.categoryName === 'landing'
+      ? basePath
+      : await createRoute(projectPath, page.categoryName);
+
+  const content = await fetchPageContent(uiLibrary, page, authProvider);
+  await writePageContent(routePath, content);
+
+  if (page.assets) {
+    await assetsUtils.addAssets(projectPath, page.assets);
+  }
+  if (page.components) {
+    await componentsUtils.addComponents(projectPath, uiLibrary, page.components);
   }
 
-  public async addPages(
-    projectPath: string,
-    uiLibrary: string,
-    pages: Page[],
-    authProvider?: 'supabase' | 'pocketbase' | undefined
-  ): Promise<void> {
+  if (page.categoryName !== 'landing') {
+    await cleanRouteVariants(routePath, page.name);
+  }
+}
+
+/**
+ * Add multiple pages to the project.
+ */
+export async function addPages(
+  projectPath: string,
+  uiLibrary: string,
+  pages: Page[],
+  authProvider?: 'supabase' | 'pocketbase'
+): Promise<void> {
+  for (const page of pages) {
     try {
-      // Handle landing page separately since it goes in the root
-      const landingPage = pages.find((page) => page.categoryName === 'landing');
-
-      if (landingPage) {
-        const content = await this.fetchPageContent(
-          uiLibrary,
-          landingPage,
-          authProvider
-        );
-
-        const routesPath = path.join(projectPath, 'src', 'routes');
-        await fs.mkdir(routesPath, { recursive: true });
-        await fs.writeFile(
-          path.join(routesPath, '+page.svelte'),
-          content,
-          'utf-8'
-        );
-
-        // Add assets and components for landing page
-        if (landingPage.assets) {
-          await this.assetsUtils.addAssets(projectPath, landingPage.assets);
-        }
-
-        if (landingPage.components) {
-          await this.componentsUtils.addComponents(
-            projectPath,
-            uiLibrary,
-            landingPage.components
-          );
-        }
-      }
-
-      // Handle all other pages
-      for (const page of pages) {
-        // Skip landing page as it's handled above
-        if (page.categoryName === 'landing') {
-          continue;
-        }
-
-        try {
-          const routePath = await this.createRoute(
-            projectPath,
-            page.categoryName
-          );
-
-          const content = await this.fetchPageContent(
-            uiLibrary,
-            page,
-            authProvider
-          );
-
-          // Write the page content
-          await fs.writeFile(
-            path.join(routePath, '+page.svelte'),
-            content,
-            'utf-8'
-          );
-
-          // Add assets and components for the page
-          if (page.assets) {
-            await this.assetsUtils.addAssets(projectPath, page.assets);
-          }
-          if (page.components) {
-            await this.componentsUtils.addComponents(
-              projectPath,
-              uiLibrary,
-              page.components
-            );
-          }
-
-          // Clean up any variant directories
-          const routeEntries = await fs.readdir(routePath, {
-            withFileTypes: true
-          });
-          for (const entry of routeEntries) {
-            if (entry.isDirectory() && entry.name !== page.name) {
-              await fs.rm(path.join(routePath, entry.name), {
-                recursive: true
-              });
-            }
-          }
-        } catch (error) {
-          console.error(`Error setting up ${page.categoryName} page:`, error);
-          // Continue with other pages even if one fails
-        }
-      }
+      await addPage(projectPath, uiLibrary, page, authProvider);
     } catch (error) {
-      console.error('Error adding pages:', error);
-      throw new Error(
-        `Failed to add pages: ${
-          error instanceof Error ? error.message : 'Unknown error'
-        }`
-      );
+      console.error(`Error setting up ${page.categoryName} page:`, error);
     }
   }
 }

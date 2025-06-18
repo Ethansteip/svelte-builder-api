@@ -11,7 +11,7 @@ import { config } from 'dotenv';
 import { ThemeUtils } from '../utils/ThemeUtils';
 import { FontUtils } from '../utils/FontUtils';
 import { PackageJsonUtils } from '../utils/PackageJsonUtils';
-import { PagesUtils } from '../utils/PagesUtils';
+import { addPages } from '../utils/PagesUtils';
 import { EnvUtils } from '../utils/EnvUtils';
 import { AuthenticationProvider } from './AuthenticationProvider';
 config();
@@ -34,14 +34,12 @@ export class ProjectRepository implements ProjectRepositoryInterface {
   private readonly DAISY_POCKETBASE_TEMPLATE_REPO =
     'git@github.com:Ethansteip/daisy-pocketbase.git';
   private ThemeUtils: ThemeUtils;
-  private PagesUtils: PagesUtils;
   private EnvUtils: EnvUtils;
   private FontUtils: FontUtils;
   private PackageJsonUtils: PackageJsonUtils;
 
   constructor() {
     this.ThemeUtils = new ThemeUtils();
-    this.PagesUtils = new PagesUtils();
     this.EnvUtils = new EnvUtils();
     this.FontUtils = new FontUtils();
     this.PackageJsonUtils = new PackageJsonUtils();
@@ -84,7 +82,7 @@ export class ProjectRepository implements ProjectRepositoryInterface {
       // Setup pages - landing, auth, account, etc.
       // TODO: create new BaseProvider class to deal with these repos.
       if (!authProvider) {
-        await this.PagesUtils.addPages(projectPath, uiLibrary, pages);
+        await addPages(projectPath, uiLibrary, pages);
       }
 
       // Add .env file
