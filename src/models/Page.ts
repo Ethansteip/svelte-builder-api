@@ -3,9 +3,14 @@ import { Component } from './Component';
 
 export interface Page {
   id?: number;
-  href?: string;
   categoryId: number;
-  categoryName: 'landing' | 'auth' | 'account';
+  categoryName:
+    | 'landing'
+    | 'signup'
+    | 'signin'
+    | 'forgot-password'
+    | 'reset-password'
+    | 'account';
   /**
    * Path inside Supabase Storage where the page content resides. This path
    * should not include the ui library or auth provider as those will be

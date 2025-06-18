@@ -39,6 +39,7 @@ export class AuthenticationProvider {
         `authentication/supabase`,
         'hooks.server.ts'
       );
+
       await fs.writeFile(
         path.join(this.projectPath, 'src', 'hooks.server.ts'),
         await hooksServer.text()

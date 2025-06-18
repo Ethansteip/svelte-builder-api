@@ -4,14 +4,13 @@ import { Component } from '../models/Component';
 import { StorageRepository } from '../repositories/StorageRepository';
 import { AssetsUtils } from './AssetsUtils';
 
+const storageRepository = new StorageRepository();
+
 export class ComponentsUtils {
-  private storageRepository: StorageRepository;
-
-  constructor() {
-    this.storageRepository = new StorageRepository();
-  }
-
-  public async addComponents(
+  /**
+   * Add components to the project directory.
+   */
+  async addComponents(
     projectPath: string,
     uiLibrary: string,
     components: Component[]
@@ -20,16 +19,16 @@ export class ComponentsUtils {
 
     for (const component of components) {
       try {
-        const componentContent = await this.storageRepository.getFromStorage(
-          `${uiLibrary}/${component.filePath}`,
-          component.fileName
+        const storagePath = `${uiLibrary}/${component.bucketPath}`;
+        const componentContent = await storageRepository.getFromStorage(
+          storagePath,
+          component.name
         );
 
         if (!componentContent) {
-          console.warn(
-            `Component not found: ${component.filePath}/${component.fileName}`
+          throw new Error(
+            `Component not found: ${component.bucketPath}/${component.name}`
           );
-          continue;
         }
 
         const componentDir = path.join(
@@ -37,12 +36,12 @@ export class ComponentsUtils {
           'src',
           'lib',
           'components',
-          component.componentDirectory
+          component.name
         );
-        await fs.mkdir(componentDir, { recursive: true });
 
+        await fs.mkdir(componentDir, { recursive: true });
         await fs.writeFile(
-          path.join(componentDir, component.fileName),
+          path.join(componentDir, component.name),
           await componentContent.text(),
           'utf-8'
         );

@@ -80,7 +80,6 @@ export class ProjectRepository implements ProjectRepositoryInterface {
       );
 
       // Setup pages - landing, auth, account, etc.
-      // TODO: create new BaseProvider class to deal with these repos.
       if (!authProvider) {
         await addPages(projectPath, uiLibrary, pages);
       }
