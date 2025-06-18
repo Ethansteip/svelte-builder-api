@@ -6,7 +6,13 @@ export interface Page {
   href?: string;
   categoryId: number;
   categoryName: 'landing' | 'auth' | 'account';
-  storagePath: string;
+  /**
+   * Path inside Supabase Storage where the page content resides. This path
+   * should not include the ui library or auth provider as those will be
+   * prefixed when fetching the file.
+   * Example: `/landing/service`.
+   */
+  bucketPath: string;
   name: string;
   assets?: Asset[];
   components?: Component[];
