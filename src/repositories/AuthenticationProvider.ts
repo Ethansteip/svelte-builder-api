@@ -1,23 +1,22 @@
 import { EnvUtils } from '../utils/EnvUtils';
-import { StorageRepository } from './StorageRepository';
-import fs from 'fs/promises';
-import path from 'path';
+import { addPages } from '../utils/PagesUtils';
+import { Page } from '../models/Page';
 
 export class AuthenticationProvider {
   private readonly projectPath: string;
   private readonly envUtils: EnvUtils;
-  private readonly storageRepository: StorageRepository;
 
   constructor(projectPath: string) {
     this.projectPath = projectPath;
     this.envUtils = new EnvUtils();
-    this.storageRepository = new StorageRepository();
   }
 
-  public async addSupabase(uiLibrary: string) {
+  public async addSupabase(uiLibrary: string, pages: Page[]) {
     try {
-      // add .env variables to project
-      // anon key, supabase url, service role key, and jwt secret
+      // Add pages with Supabase auth provider
+      await addPages(this.projectPath, uiLibrary, pages, 'supabase');
+
+      // Add .env variables to project
       await this.envUtils.addEnvVariable(
         this.projectPath,
         'PUBLIC_SUPABASE_URL',
@@ -32,121 +31,6 @@ export class AuthenticationProvider {
         this.projectPath,
         'SUPABASE_SERVICE_ROLE_KEY',
         ''
-      );
-
-      // 2. Fetch and save hooks.server.ts
-      const hooksServer = await this.storageRepository.getFromStorage(
-        `authentication/supabase`,
-        'hooks.server.ts'
-      );
-
-      await fs.writeFile(
-        path.join(this.projectPath, 'src', 'hooks.server.ts'),
-        await hooksServer.text()
-      );
-
-      // 3. Fetch and save app.d.ts
-      const appDts = await this.storageRepository.getFromStorage(
-        `authentication/supabase`,
-        'app.d.ts'
-      );
-
-      await fs.writeFile(
-        path.join(this.projectPath, 'src', 'app.d.ts'),
-        await appDts.text()
-      );
-
-      // 4. Fetch and save +layout.server.ts
-      const layoutServer = await this.storageRepository.getFromStorage(
-        `authentication/supabase`,
-        '+layout.server.ts'
-      );
-
-      const routesDir = path.join(this.projectPath, 'src', 'routes');
-      await fs.mkdir(routesDir, { recursive: true });
-      await fs.writeFile(
-        path.join(routesDir, '+layout.server.ts'),
-        await layoutServer.text()
-      );
-
-      // 5. Fetch and save +layout.ts
-      const layout = await this.storageRepository.getFromStorage(
-        `authentication/supabase`,
-        '+layout.ts'
-      );
-      await fs.writeFile(
-        path.join(routesDir, '+layout.ts'),
-        await layout.text()
-      );
-
-      // 6. Fetch and save events.ts
-      const serverDir = path.join(this.projectPath, 'src', 'lib', 'server');
-      await fs.mkdir(serverDir, { recursive: true });
-      const event = await this.storageRepository.getFromStorage(
-        `authentication/supabase`,
-        'event.ts'
-      );
-
-      await fs.writeFile(path.join(serverDir, 'event.ts'), await event.text());
-
-      // 7. Fetch and save callback +server.ts
-      const authCallbackDir = path.join(
-        this.projectPath,
-        'src',
-        'routes',
-        'auth',
-        'callback'
-      );
-      await fs.mkdir(authCallbackDir, { recursive: true });
-      const callbackServer = await this.storageRepository.getFromStorage(
-        `authentication/supabase/auth/callback`,
-        '+server.ts'
-      );
-
-      await fs.writeFile(
-        path.join(authCallbackDir, '+server.ts'),
-        await callbackServer.text()
-      );
-
-      // 8. Fetch and save confirm +server.ts
-      const authConfirmDir = path.join(
-        this.projectPath,
-        'src',
-        'routes',
-        'auth',
-        'confirm'
-      );
-
-      await fs.mkdir(authConfirmDir, { recursive: true });
-      const confirmServer = await this.storageRepository.getFromStorage(
-        `authentication/supabase/auth/confirm`,
-        '+server.ts'
-      );
-      await fs.writeFile(
-        path.join(authConfirmDir, '+server.ts'),
-        await confirmServer.text()
-      );
-
-      // 9. Fetch and save auth +page.server.ts
-      const authDir = path.join(this.projectPath, 'src', 'routes', 'auth');
-      const authServer = await this.storageRepository.getFromStorage(
-        `authentication/supabase/auth`,
-        '+page.server.ts'
-      );
-
-      await fs.writeFile(
-        path.join(authDir, '+page.server.ts'),
-        await authServer.text()
-      );
-
-      // 10. Replace existing +layout.svelte with supabase +layout.svelte
-      const layoutSvelte = await this.storageRepository.getFromStorage(
-        `authentication/supabase`,
-        '+layout.svelte'
-      );
-      await fs.writeFile(
-        path.join(routesDir, '+layout.svelte'),
-        await layoutSvelte.text()
       );
     } catch (error) {
       console.error(

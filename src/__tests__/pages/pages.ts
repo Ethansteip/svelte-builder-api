@@ -5,10 +5,9 @@ export const pages: Page[] = [
    * Landing Pages
    */
   {
-    id: 1,
-    categoryId: 1,
     categoryName: 'landing',
     bucketPath: '/landing/mobile-app',
+    landingPage: true,
     name: 'mobile-app',
     components: [
       {
@@ -21,26 +20,23 @@ export const pages: Page[] = [
     ]
   },
   {
-    id: 2,
-    categoryId: 1,
     categoryName: 'landing',
     bucketPath: '/landing/saas',
+    landingPage: true,
     name: 'saas',
     components: []
   },
   {
-    id: 3,
-    categoryId: 1,
     categoryName: 'landing',
     bucketPath: '/landing/service',
+    landingPage: true,
     name: 'service',
     components: []
   },
   {
-    id: 4,
-    categoryId: 1,
     categoryName: 'landing',
     bucketPath: '/landing/standard-1',
+    landingPage: true,
     name: 'standard-1',
     components: []
   },
@@ -48,18 +44,18 @@ export const pages: Page[] = [
    * Account Pages
    */
   {
-    id: 6,
-    categoryId: 2,
     categoryName: 'account',
     bucketPath: '/account/standard-1',
+    routePath: ['account'],
+    authenticatedPage: true,
     name: 'standard-1',
     components: []
   },
   {
-    id: 7,
-    categoryId: 2,
     categoryName: 'account',
     bucketPath: '/account/standard-2',
+    routePath: ['account'],
+    authenticatedPage: true,
     name: 'standard-2',
     components: []
   },
@@ -67,66 +63,74 @@ export const pages: Page[] = [
    * Auth Pages
    */
   {
-    id: 8,
-    categoryId: 3,
     categoryName: 'signin',
     bucketPath: '/auth/signin/signin-1',
+    routePath: ['auth'],
+    webPage: true,
+    includePageServer: true,
     name: 'sigin-1',
     components: []
   },
   {
-    id: 9,
-    categoryId: 3,
     categoryName: 'signin',
     bucketPath: '/auth/signin/signin-2',
+    routePath: ['auth'],
+    webPage: true,
+    includePageServer: true,
     name: 'sigin-2',
     components: []
   },
   {
-    id: 10,
-    categoryId: 3,
     categoryName: 'signin',
     bucketPath: '/auth/signin/signin-3',
+    routePath: ['auth'],
+    webPage: true,
+    includePageServer: true,
     name: 'sigin-3',
     components: []
   },
   {
-    id: 11,
-    categoryId: 3,
     categoryName: 'signup',
     bucketPath: '/auth/signup/signup-1',
+    routePath: ['auth', 'signup'],
+    webPage: true,
+    includePageServer: true,
     name: 'signup-3',
     components: []
   },
   {
-    id: 12,
-    categoryId: 3,
     categoryName: 'signup',
     bucketPath: '/auth/signup/signup-2',
+    routePath: ['auth', 'signup'],
+    webPage: true,
+    includePageServer: true,
     name: 'signup-2',
     components: []
   },
   {
-    id: 13,
-    categoryId: 3,
     categoryName: 'signup',
     bucketPath: '/auth/signup/signup-3',
+    routePath: ['auth', 'signup'],
+    webPage: true,
+    includePageServer: true,
     name: 'signup-3',
     components: []
   },
   {
-    id: 14,
-    categoryId: 3,
     categoryName: 'reset-password',
     bucketPath: '/auth/reset-password/reset-password-1',
+    routePath: ['auth', 'reset-password'],
+    webPage: true,
+    includePageServer: true,
     name: 'reset-password-1',
     components: []
   },
   {
-    id: 15,
-    categoryId: 3,
     categoryName: 'forgot-password',
     bucketPath: '/auth/forgot-password/forgot-password-1',
+    routePath: ['auth', 'forgot-password'],
+    webPage: true,
+    includePageServer: true,
     name: 'forgot-password-1',
     components: []
   }

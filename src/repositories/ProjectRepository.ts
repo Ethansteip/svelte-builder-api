@@ -85,17 +85,18 @@ export class ProjectRepository implements ProjectRepositoryInterface {
       }
 
       // Add .env file
-      await EnvUtils.createEnvFile(projectPath, [
-        {
-          key: 'PUBLIC_APP_NAME',
-          value: projectSettings.name.clientName,
-          type: 'string'
-        }
-      ]);
+      await this.EnvUtils.addEnvVariable(
+        projectPath,
+        'PUBLIC_APP_NAME',
+        name.clientName
+      );
 
       // Add auth provider
       if (authProvider === 'supabase') {
-        await new AuthenticationProvider(projectPath).addSupabase(uiLibrary);
+        await new AuthenticationProvider(projectPath).addSupabase(
+          uiLibrary,
+          pages
+        );
       } else if (authProvider === 'pocketbase') {
         console.log('Pocketbase not implemented yet');
       }

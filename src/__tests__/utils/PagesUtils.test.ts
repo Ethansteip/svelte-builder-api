@@ -10,8 +10,6 @@ import {
 } from '../../utils/PagesUtils';
 import { Page } from '../../models/Page';
 import { StorageRepository } from '../../repositories/StorageRepository';
-import { AssetsUtils } from '../../utils/AssetsUtils';
-import { ComponentsUtils } from '../../utils/ComponentsUtils';
 import { pages } from '../pages/pages';
 
 // Mock dependencies
@@ -100,7 +98,6 @@ describe('PagesUtils', () => {
     it('should add a signin page to the correct route path', async () => {
       const mockPage: Page = {
         name: 'login',
-        categoryId: 1,
         categoryName: 'signin',
         bucketPath: '/auth/signin/login',
         assets: [],
@@ -134,9 +131,9 @@ describe('PagesUtils', () => {
     it('should add a landing page to the root routes directory', async () => {
       const mockPage: Page = {
         name: 'landing',
-        categoryId: 1,
         categoryName: 'landing',
         bucketPath: '/landing',
+        landingPage: true,
         assets: [],
         components: []
       };
@@ -155,6 +152,7 @@ describe('PagesUtils', () => {
         projectPath,
         'src',
         'routes',
+        '(web)',
         '+page.svelte'
       );
       const fileExists = await fs
@@ -182,6 +180,7 @@ describe('PagesUtils', () => {
         projectPath,
         'src',
         'routes',
+        '(web)',
         '+page.svelte'
       );
       const landingPageExists = await fs

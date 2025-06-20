@@ -10,7 +10,7 @@ const assetsUtils = new AssetsUtils();
 const componentsUtils = new ComponentsUtils();
 
 /**
- * Create the directory for a route and return the path to it.
+ * Create the directory for a route and return the poath t it.
  */
 export async function createRoute(
   projectPath: string,
@@ -48,6 +48,32 @@ export async function fetchPageContent(
 }
 
 /**
+ * Fetch the +page.server.ts content for a given page from Supabase storage.
+ */
+
+export async function fetchPageServerContent(
+  uiLibrary: string,
+  page: Page,
+  authProvider?: string
+): Promise<string> {
+  const storagePath = `${uiLibrary}/pages/${
+    authProvider ?? 'base'
+  }${page.bucketPath.split('/').slice(0, -1).join('/')}`;
+  const pageContent = await storageRepository.getFromStorage(
+    storagePath,
+    '+page.server.ts'
+  );
+
+  if (!pageContent) {
+    throw new Error(
+      `Page content not found for ${page.categoryName}/${page.name}`
+    );
+  }
+
+  return pageContent.text();
+}
+
+/**
  * Write content to a +page.svelte file inside the provided directory.
  */
 export async function writePageContent(
@@ -56,6 +82,17 @@ export async function writePageContent(
 ): Promise<void> {
   await fs.mkdir(targetDir, { recursive: true });
   const file = path.join(targetDir, '+page.svelte');
+  await fs.writeFile(file, content, 'utf-8');
+}
+
+/**
+ * Write content to a +page.server.ts file inside the provided directory.
+ */
+export async function writePageServerContent(
+  targetDir: string,
+  content: string
+): Promise<void> {
+  const file = path.join(targetDir, '+page.server.ts');
   await fs.writeFile(file, content, 'utf-8');
 }
 
@@ -75,36 +112,29 @@ export async function cleanRouteVariants(
 }
 
 /**
- * Get the target directory for a page based on its category and auth provider.
+ * Get the target directory for a page based on it being
+ * either a landing page, authenticated page, or web page
+ * and its route path.
  */
-function getTargetDirectory(
-  projectPath: string,
-  page: Page,
-  authProvider?: string
-): string {
+function getTargetDirectory(projectPath: string, page: Page): string {
   const basePath = path.join(projectPath, 'src', 'routes');
+  const webPath = path.join(basePath, '(web)');
+  const authenticatedPath = path.join(basePath, '(authenticated)');
 
-  // For landing pages, always place in root routes
-  if (page.categoryName === 'landing') {
-    return basePath;
+  // if landing page, return web path
+  if (page.landingPage) {
+    return webPath;
+  } else if (page.authenticatedPage) {
+    return path.join(authenticatedPath, page.routePath?.join('/') ?? '');
+  } else if (page.webPage) {
+    return path.join(webPath, page.routePath?.join('/') ?? '');
   }
 
-  // For Supabase auth provider
-  if (authProvider === 'supabase') {
-    if (page.categoryName === 'signin') {
-      return path.join(basePath, '(web)', 'auth');
-    }
-    if (
-      ['signup', 'reset-password', 'forgot-password'].includes(
-        page.categoryName
-      )
-    ) {
-      return path.join(basePath, 'auth', page.categoryName);
-    }
-  }
-
-  // Default case: place in category directory
-  return path.join(basePath, page.categoryName);
+  throw new Error(
+    `Invalid target directory for page: ${page.categoryName} ${
+      page.routePath?.join('/') ?? ''
+    }`
+  );
 }
 
 /**
@@ -116,13 +146,26 @@ export async function addPage(
   page: Page,
   authProvider?: 'supabase' | 'pocketbase'
 ): Promise<void> {
-  const targetDir = getTargetDirectory(projectPath, page, authProvider);
-  const content = await fetchPageContent(uiLibrary, page, authProvider);
-  await writePageContent(targetDir, content);
+  const targetDir = getTargetDirectory(projectPath, page);
+  const pageContent = await fetchPageContent(uiLibrary, page, authProvider);
+  const pageServerContent = page.includePageServer
+    ? await fetchPageServerContent(uiLibrary, page, authProvider)
+    : '';
 
+  // write +page.svelte content to project
+  await writePageContent(targetDir, pageContent);
+
+  // write +page.server.ts to project if it exists
+  if (pageServerContent) {
+    await writePageServerContent(targetDir, pageServerContent);
+  }
+
+  // add assets to project
   if (page.assets) {
     await assetsUtils.addAssets(projectPath, page.assets);
   }
+
+  // add components to project
   if (page.components) {
     await componentsUtils.addComponents(
       projectPath,
