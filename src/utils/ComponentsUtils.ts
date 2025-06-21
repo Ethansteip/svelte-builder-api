@@ -13,16 +13,21 @@ export class ComponentsUtils {
   async addComponents(
     projectPath: string,
     uiLibrary: string,
-    components: Component[]
+    components: Component[],
+    authProvider?: 'supabase' | 'pocketbase'
   ): Promise<void> {
     if (!components || components.length === 0) return;
 
     for (const component of components) {
       try {
-        const storagePath = `${uiLibrary}/${component.bucketPath}`;
+        const storagePath = `${uiLibrary}/components/${
+          authProvider ? authProvider : 'base'
+        }${component.bucketPath}`;
+
+        const componentPath = component.componentPath.join('/');
         const componentContent = await storageRepository.getFromStorage(
           storagePath,
-          component.name
+          `${component.name}.svelte`
         );
 
         if (!componentContent) {
@@ -36,12 +41,12 @@ export class ComponentsUtils {
           'src',
           'lib',
           'components',
-          component.name
+          componentPath
         );
 
         await fs.mkdir(componentDir, { recursive: true });
         await fs.writeFile(
-          path.join(componentDir, component.name),
+          path.join(componentDir, `${component.name}.svelte`),
           await componentContent.text(),
           'utf-8'
         );

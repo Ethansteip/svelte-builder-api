@@ -170,7 +170,8 @@ export async function addPage(
     await componentsUtils.addComponents(
       projectPath,
       uiLibrary,
-      page.components
+      page.components,
+      authProvider
     );
   }
 

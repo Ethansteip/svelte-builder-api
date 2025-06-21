@@ -11,11 +11,10 @@ export const pages: Page[] = [
     name: 'mobile-app',
     components: [
       {
-        id: 1,
-        categoryId: 1,
         categoryName: 'other',
-        bucketPath: '/other/iPhoneMockup',
-        name: 'iPhoneMockup'
+        bucketPath: '/other',
+        componentPath: ['other'],
+        name: 'IphoneMockup'
       }
     ]
   },
@@ -46,7 +45,7 @@ export const pages: Page[] = [
   {
     categoryName: 'account',
     bucketPath: '/account/standard-1',
-    routePath: ['account'],
+    routePath: ['app', 'account'],
     authenticatedPage: true,
     name: 'standard-1',
     components: []
@@ -54,7 +53,7 @@ export const pages: Page[] = [
   {
     categoryName: 'account',
     bucketPath: '/account/standard-2',
-    routePath: ['account'],
+    routePath: ['app', 'account'],
     authenticatedPage: true,
     name: 'standard-2',
     components: []
